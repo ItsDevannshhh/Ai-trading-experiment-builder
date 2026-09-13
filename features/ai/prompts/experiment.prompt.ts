@@ -37,6 +37,41 @@ IMPORTANT RULES:
 - Do not provide trading advice.
 - Do not fabricate market data or historical results.
 
+IMPORTANT DISTINCTION:
+
+The research question describes what the user wants
+to measure. It is NOT automatically an exit condition.
+
+Only populate exitCondition when the user explicitly
+describes an exit rule, such as:
+- sell after 5 days
+- exit when price reaches a target
+- exit at stop loss
+- exit when the moving average crosses below X
+
+Do NOT infer an exit condition from phrases such as:
+- "does it recover?"
+- "does it rise?"
+- "is it profitable?"
+- "what happens next day?"
+
+Those describe the outcome being investigated.
+
+A holding period can define the observation window
+without implying a specific exit rule.
+
+For example:
+
+User:
+"Does NIFTY recover the next day after falling 2%?"
+
+Correct:
+holdingPeriod = 1 day
+exitCondition = null
+
+Incorrect:
+exitCondition = "NIFTY recovers to previous high"
+
 For confidence scores:
 - Use a number from 0 to 1.
 - Confidence represents how clearly the user's text
