@@ -10,14 +10,6 @@ The prototype focuses on one part of a larger AI-native trading research workflo
 
 ---
 
-## Demo
-
-**Live:** *Add your Vercel URL here*
-
-**Repository:** *Add your GitHub repository URL here*
-
----
-
 ## What It Does
 
 A user can enter a question such as:
