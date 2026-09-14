@@ -3,16 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RiCheckLine, RiCloseLine } from "@remixicon/react";
+import { cn } from "cn";
 
 interface EditableFieldProps {
   label: string;
   value: string;
   displayValue?: React.ReactNode;
-  onSave: (value: string) => void;
+  onSave: (value: string) => boolean | void;
   type?: "text" | "select";
   options?: { label: string; value: string }[];
   placeholder?: string;
   isWarning?: boolean;
+  error?: string;
+  onErrorChange?: (error?: string) => void;
+  validate?: (value: string) => string | undefined | null;
 }
 
 export function EditableField({ 
@@ -23,20 +27,47 @@ export function EditableField({
   type = "text", 
   options = [],
   placeholder,
-  isWarning = false
+  isWarning = false,
+  error,
+  onErrorChange,
+  validate
 }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [currentValue, setCurrentValue] = useState(value);
+  const [localError, setLocalError] = useState<string | undefined>();
+
+  const activeError = error !== undefined ? error : localError;
+
+  const clearError = () => {
+    setLocalError(undefined);
+    onErrorChange?.(undefined);
+  };
 
   const handleSave = () => {
-    onSave(currentValue);
+    if (validate) {
+      const valErr = validate(currentValue);
+      if (valErr) {
+        setLocalError(valErr);
+        onErrorChange?.(valErr);
+        return;
+      }
+    }
+    const result = onSave(currentValue);
+    if (result === false) {
+      return;
+    }
+    clearError();
     setIsEditing(false);
   };
 
   const handleCancel = () => {
     setCurrentValue(value);
+    clearError();
     setIsEditing(false);
   };
+
+  const inputId = `editable-field-${label.toLowerCase().replace(/\s+/g, "-")}`;
+  const errorId = `${inputId}-error`;
 
   if (!isEditing) {
     return (
@@ -48,6 +79,7 @@ export function EditableField({
             className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] uppercase font-bold text-blue-600 hover:text-blue-800"
             onClick={() => {
               setCurrentValue(value);
+              clearError();
               setIsEditing(true);
             }}
           >
@@ -84,10 +116,21 @@ export function EditableField({
           </Select>
         ) : (
           <Input 
+            id={inputId}
             value={currentValue} 
-            onChange={(e) => setCurrentValue(e.target.value)} 
+            onChange={(e) => {
+              setCurrentValue(e.target.value);
+              if (activeError) {
+                clearError();
+              }
+            }} 
             placeholder={placeholder}
-            className="h-8 text-sm"
+            className={cn(
+              "h-8 text-sm",
+              activeError && "border-red-500 focus-visible:ring-red-500 dark:border-red-500"
+            )}
+            aria-invalid={Boolean(activeError)}
+            aria-describedby={activeError ? errorId : undefined}
             autoFocus
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSave();
@@ -104,6 +147,15 @@ export function EditableField({
           </Button>
         </div>
       </div>
+      {activeError && (
+        <span
+          id={errorId}
+          role="alert"
+          className="text-xs text-red-600 dark:text-red-400 font-medium mt-0.5"
+        >
+          {activeError}
+        </span>
+      )}
     </div>
   );
 }

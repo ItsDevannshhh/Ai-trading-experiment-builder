@@ -21,6 +21,7 @@ interface ExperimentResultProps {
 export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps) {
   const [jsonVisible, setJsonVisible] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [holdingPeriodError, setHoldingPeriodError] = useState<string | undefined>();
 
   // Helpers to format fields
   const getInstrument = () => experiment.instrument || "Not specified";
@@ -135,15 +136,32 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
               displayValue={getHoldingPeriod()}
               isWarning={holdingPeriodIsWarning}
               placeholder="e.g. 5 days, 2 weeks"
+              error={holdingPeriodError}
+              onErrorChange={setHoldingPeriodError}
               onSave={(val) => {
-                let newHoldingPeriod: typeof experiment.holdingPeriod = { value: null, unit: "unknown" as const, description: null };
-                if (val.trim()) {
-                  const parsed = parseHoldingPeriod(val);
-                  if (parsed) {
-                    newHoldingPeriod = parsed;
-                  }
+                const trimmed = val.trim();
+                if (!trimmed) {
+                  setHoldingPeriodError(undefined);
+                  const updated = {
+                    ...experiment,
+                    holdingPeriod: {
+                      value: null,
+                      unit: "unknown" as const,
+                      description: null,
+                    },
+                  };
+                  onUpdate?.(validateExperiment(updated));
+                  return;
                 }
-                const updated = { ...experiment, holdingPeriod: newHoldingPeriod };
+
+                const parsed = parseHoldingPeriod(trimmed);
+                if (!parsed) {
+                  setHoldingPeriodError('Use a format like "5 days" or "2 weeks".');
+                  return false;
+                }
+
+                setHoldingPeriodError(undefined);
+                const updated = { ...experiment, holdingPeriod: parsed };
                 onUpdate?.(validateExperiment(updated));
               }}
             />
