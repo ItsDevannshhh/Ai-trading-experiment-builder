@@ -2,10 +2,11 @@ import { generateObject } from "ai";
 
 import { EXPERIMENT_SYSTEM_PROMPT } from "@/features/ai/prompts/experiment.prompt";
 import { aiProvider } from "@/features/ai/server/provider";
-import { experimentSchema } from "@/features/experiments/schemas/experiment.schema";
+import { experimentExtractionSchema } from "@/features/ai/schemas/experiment-extraction.schema";
 import { validateExperiment } from "@/features/experiments/utils/validate-experiment";
+import type { TradingExperiment } from "@/features/experiments/types/experiment.types";
 
-export async function analyzeExperiment(question: string) {
+export async function analyzeExperiment(question: string): Promise<TradingExperiment> {
     const trimmedQuestion = question.trim();
 
     if (!trimmedQuestion) {
@@ -14,10 +15,16 @@ export async function analyzeExperiment(question: string) {
 
     const result = await generateObject({
         model: aiProvider("gpt-4o-mini"),
-        schema: experimentSchema,
+        schema: experimentExtractionSchema,
         system: EXPERIMENT_SYSTEM_PROMPT,
         prompt: trimmedQuestion,
     });
 
-    return validateExperiment(result.object);
+    const experiment: TradingExperiment = {
+        ...result.object,
+        missingFields: [],
+        status: "needs_clarification",
+    };
+
+    return validateExperiment(experiment);
 }
