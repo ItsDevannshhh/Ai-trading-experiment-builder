@@ -30,12 +30,24 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
     if (experiment.timeframe.value === "unknown") return "Not specified";
     return experiment.timeframe.description || experiment.timeframe.value;
   };
-  const getHoldingPeriod = () => {
-    if (experiment.holdingPeriod.value === null && experiment.holdingPeriod.unit === "unknown") {
-      return "Needs clarification";
+  const hasValidHoldingPeriod =
+    experiment.holdingPeriod.value !== null &&
+    experiment.holdingPeriod.unit !== "unknown";
+  const hasExitCondition = Boolean(experiment.exitCondition?.trim());
+
+  const getHoldingPeriod = (): string => {
+    if (hasValidHoldingPeriod) {
+      return experiment.holdingPeriod.description ||
+        `${experiment.holdingPeriod.value} ${experiment.holdingPeriod.unit}`;
     }
-    return experiment.holdingPeriod.description || `${experiment.holdingPeriod.value} ${experiment.holdingPeriod.unit}`;
+    if (hasExitCondition) {
+      return "Not specified — exit condition used";
+    }
+    return "Needs clarification";
   };
+
+  const holdingPeriodIsWarning = !hasValidHoldingPeriod && !hasExitCondition;
+  const holdingPeriodUsesExitCondition = !hasValidHoldingPeriod && hasExitCondition;
 
   const isReady = experiment.status === "ready";
   const needsClarification = experiment.status === "needs_clarification";
@@ -55,7 +67,7 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
       {isReady && (
         <div className="flex items-center gap-2 text-green-600 dark:text-green-500 font-medium px-2">
           <RiCheckLine className="w-5 h-5" />
-          <span>✓ Experiment ready</span>
+          <span>Experiment ready</span>
         </div>
       )}
 
@@ -116,12 +128,12 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
             <EditableField 
               label="Holding Period"
               value={
-                experiment.holdingPeriod.value !== null && experiment.holdingPeriod.unit !== "unknown"
+                hasValidHoldingPeriod
                   ? `${experiment.holdingPeriod.value} ${experiment.holdingPeriod.unit}`
                   : ""
               }
               displayValue={getHoldingPeriod()}
-              isWarning={getHoldingPeriod() === "Needs clarification"}
+              isWarning={holdingPeriodIsWarning}
               placeholder="e.g. 5 days, 2 weeks"
               onSave={(val) => {
                 let newHoldingPeriod: typeof experiment.holdingPeriod = { value: null, unit: "unknown" as const, description: null };
@@ -135,6 +147,11 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
                 onUpdate?.(validateExperiment(updated));
               }}
             />
+            {holdingPeriodUsesExitCondition && (
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                Using exit condition as the exit rule
+              </p>
+            )}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

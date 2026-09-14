@@ -35,12 +35,18 @@ export function validateExperiment(
 ): TradingExperiment {
     const missingFields = getRequiredMissingFields(experiment);
 
+    const hasBlockingAmbiguities =
+        experiment.ambiguities.length > 0;
+
+    const isReady =
+        missingFields.length === 0 &&
+        !hasBlockingAmbiguities;
+
     return {
         ...experiment,
         missingFields,
-        status:
-            missingFields.length === 0
-                ? "ready"
-                : "needs_clarification",
+        status: isReady
+            ? "ready"
+            : "needs_clarification",
     };
 }
