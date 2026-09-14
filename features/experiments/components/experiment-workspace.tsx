@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ExperimentInput } from "./experiment-input";
 import { ExperimentResult } from "./experiment-result";
+import { ClarificationPanel } from "./clarification-panel";
 import { TradingExperiment } from "../types/experiment.types";
 
 export function ExperimentWorkspace() {
@@ -27,7 +28,15 @@ export function ExperimentWorkspace() {
       <ExperimentInput onSuccess={handleAnalyzeSuccess} />
       
       {experiment && (
-        <ExperimentResult experiment={experiment} />
+        <>
+          <ExperimentResult experiment={experiment} />
+          {experiment.status === "needs_clarification" && (
+            <ClarificationPanel
+              experiment={experiment}
+              onExperimentUpdate={setExperiment}
+            />
+          )}
+        </>
       )}
     </div>
   );

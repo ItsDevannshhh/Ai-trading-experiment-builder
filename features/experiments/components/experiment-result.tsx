@@ -150,25 +150,12 @@ export function ExperimentResult({ experiment }: ExperimentResultProps) {
         </CardContent>
       </Card>
 
-      {/* Clarification Warning */}
+      {/* Clarification Warning (Compact) */}
       {needsClarification && experiment.missingFields.length > 0 && (
-        <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900 text-amber-900 dark:text-amber-200 rounded-xl p-4">
-          <RiErrorWarningLine className="w-5 h-5 !text-amber-600 dark:!text-amber-500" />
-          <AlertTitle className="text-base font-semibold text-amber-800 dark:text-amber-300">
-            ⚠ {experiment.missingFields.length === 1 ? "One detail needs clarification" : `${experiment.missingFields.length} details need clarification`}
-          </AlertTitle>
-          <AlertDescription className="text-sm mt-3 flex flex-col gap-3 text-amber-700 dark:text-amber-400">
-            <p className="mb-0">The experiment needs a little more information before it can be finalized.</p>
-            <div className="flex flex-col gap-1">
-              <span className="font-semibold text-amber-800 dark:text-amber-300">Missing:</span>
-              <ul className="list-disc pl-5 mt-1">
-                {experiment.missingFields.map((field) => (
-                  <li key={field}>{friendlyFieldNames[field] || field}</li>
-                ))}
-              </ul>
-            </div>
-          </AlertDescription>
-        </Alert>
+        <div className="flex items-center gap-2 mt-2 px-2 text-amber-600 dark:text-amber-500 font-medium">
+          <RiErrorWarningLine className="w-5 h-5" />
+          <span>Needs clarification</span>
+        </div>
       )}
     </div>
   );
