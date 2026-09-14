@@ -1,6 +1,17 @@
+"use client";
+
+import { useState } from "react";
 import { ExperimentInput } from "./experiment-input";
+import { TradingExperiment } from "../types/experiment.types";
 
 export function ExperimentWorkspace() {
+  const [experiment, setExperiment] = useState<TradingExperiment | null>(null);
+
+  const handleAnalyzeSuccess = (data: TradingExperiment) => {
+    console.log("Analyzed Experiment:", data);
+    setExperiment(data);
+  };
+
   return (
     <div className="flex flex-col flex-1 w-full max-w-4xl mx-auto px-6 py-16 md:py-24">
       <div className="flex flex-col gap-3 mb-10 text-center md:text-left">
@@ -12,7 +23,7 @@ export function ExperimentWorkspace() {
         </p>
       </div>
       
-      <ExperimentInput />
+      <ExperimentInput onSuccess={handleAnalyzeSuccess} />
     </div>
   );
 }
