@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { TradingExperiment } from "../types/experiment.types";
+import type { Clarification } from "@/features/ai/schemas/clarification.schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RiErrorWarningLine } from "@remixicon/react";
 import { parseHoldingPeriod } from "../utils/parse-clarification";
-import { validateExperiment } from "../utils/validate-experiment";
+import { applyClarification } from "../utils/apply-clarification";
+import { analyzeClarification } from "../api/analyze-clarification";
+import { useMutation } from "@tanstack/react-query";
 
 interface ClarificationPanelProps {
   experiment: TradingExperiment;
@@ -23,46 +26,127 @@ const clarificationQuestions: Record<string, string> = {
   filters: "Are there any additional filters or conditions?"
 };
 
+const friendlyFieldNames: Record<string, string> = {
+  instrument: "instrument",
+  timeframe: "timeframe",
+  entryCondition: "entry condition",
+  exitCondition: "exit condition",
+  holdingPeriod: "holding period",
+  filters: "filters"
+};
+
+function getClarificationValueString(clarification: Clarification): string {
+  const f = clarification.field;
+  if (f === "holdingPeriod" && clarification.holdingPeriod) {
+    return clarification.holdingPeriod.description || `${clarification.holdingPeriod.value} ${clarification.holdingPeriod.unit}`;
+  }
+  if (f === "timeframe" && clarification.timeframe) {
+    return clarification.timeframe.description || clarification.timeframe.value;
+  }
+  if (f === "filters" && clarification.filters) {
+    return clarification.filters.join(", ");
+  }
+  const val = clarification[f];
+  return typeof val === "string" ? val : JSON.stringify(val);
+}
+
 export function ClarificationPanel({ experiment, onExperimentUpdate }: ClarificationPanelProps) {
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [pendingClarification, setPendingClarification] = useState<Clarification | null>(null);
+
+  const fieldToClarify = experiment.missingFields[0];
+  const question = fieldToClarify ? (clarificationQuestions[fieldToClarify] || "Please clarify this detail.") : "";
+
+  const mutation = useMutation({
+    mutationFn: async (ans: string) => {
+      return analyzeClarification(experiment, fieldToClarify, ans);
+    },
+    onSuccess: (clarification) => {
+      if (clarification.ambiguity) {
+        setError("I couldn't determine that from your answer. Try being more specific.");
+        return;
+      }
+
+      if (clarification.field !== fieldToClarify) {
+        setPendingClarification(clarification);
+        return;
+      }
+
+      applyAndFinish(clarification);
+    },
+    onError: () => {
+      if (fieldToClarify === "holdingPeriod") {
+        const parsed = parseHoldingPeriod(answer);
+        if (parsed) {
+          applyAndFinish({
+            field: "holdingPeriod",
+            holdingPeriod: parsed,
+            instrument: null,
+            timeframe: null,
+            entryCondition: null,
+            exitCondition: null,
+            filters: null,
+            confidence: 1,
+            ambiguity: null
+          });
+          return;
+        }
+      }
+      setError("An error occurred while understanding your answer. Please try again.");
+    }
+  });
+
+  const applyAndFinish = (clarification: Clarification) => {
+    const updated = applyClarification(experiment, clarification);
+    onExperimentUpdate(updated);
+    setAnswer("");
+    setPendingClarification(null);
+  };
+
+  const handleContinue = () => {
+    if (!answer.trim()) return;
+    setError(null);
+    mutation.mutate(answer);
+  };
 
   if (experiment.missingFields.length === 0) {
     return null;
   }
 
-  const fieldToClarify = experiment.missingFields[0];
-  const question = clarificationQuestions[fieldToClarify] || "Please clarify this detail.";
-  const handleContinue = () => {
-    if (!answer.trim()) return;
-
-    if (fieldToClarify === "holdingPeriod") {
-      const parsed = parseHoldingPeriod(answer);
-
-      if (!parsed) {
-        setError(
-          'We couldn\'t determine the holding period. Try something like "5 trading days" or "2 weeks".'
-        );
-        return;
-      }
-
-      setError(null);
-
-      const updatedExperiment = {
-        ...experiment,
-        holdingPeriod: parsed,
-      };
-
-      const validated = validateExperiment(updatedExperiment);
-
-      onExperimentUpdate(validated);
-      setAnswer("");
-    } else {
-      setError(
-        "This clarification type is not supported yet. Please provide a holding period."
-      );
-    }
-  };
+  if (pendingClarification) {
+    const extractedField = pendingClarification.field;
+    const valueStr = getClarificationValueString(pendingClarification);
+    return (
+      <Card className="rounded-xl border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 shadow-sm mt-6 overflow-hidden">
+        <CardContent className="p-5 flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
+            <span className="text-base text-zinc-900 dark:text-zinc-100 font-medium">
+              That sounds like an {friendlyFieldNames[extractedField]} rather than a {friendlyFieldNames[fieldToClarify]}.
+            </span>
+            <span className="text-base text-zinc-700 dark:text-zinc-300">
+              I understood it as: <span className="italic font-medium">&quot;{valueStr}&quot;</span>
+            </span>
+            <div className="flex justify-end gap-3 mt-2">
+              <Button
+                variant="outline"
+                onClick={() => setPendingClarification(null)}
+                className="bg-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => applyAndFinish(pendingClarification)}
+                className="bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              >
+                Apply anyway
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="rounded-xl border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 shadow-sm mt-6 overflow-hidden">
@@ -83,9 +167,10 @@ export function ClarificationPanel({ experiment, onExperimentUpdate }: Clarifica
               if (error) setError(null);
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleContinue();
+              if (e.key === "Enter" && !mutation.isPending) handleContinue();
             }}
             placeholder="Type your answer..."
+            disabled={mutation.isPending}
             className="text-base md:text-base py-5 px-3 bg-white dark:bg-zinc-900 border-amber-300 dark:border-amber-800 rounded-lg shadow-sm"
           />
           {error && (
@@ -94,10 +179,10 @@ export function ClarificationPanel({ experiment, onExperimentUpdate }: Clarifica
           <div className="flex justify-end mt-2">
             <Button
               onClick={handleContinue}
-              disabled={!answer.trim()}
+              disabled={!answer.trim() || mutation.isPending}
               className="bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
-              Continue
+              {mutation.isPending ? "Understanding..." : "Continue"}
             </Button>
           </div>
         </div>
