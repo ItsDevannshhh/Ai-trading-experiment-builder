@@ -1,20 +1,33 @@
 import { ExperimentWorkspace } from "@/features/experiments/components/experiment-workspace";
-import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-black font-sans">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-900 bg-white dark:bg-black">
+    <div className="min-h-screen flex flex-col bg-background font-sans">
+      {/* Header */}
+      <header className="sticky top-0 z-10 flex items-center justify-between px-5 sm:px-8 h-14 border-b border-border bg-background/90 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-lg tracking-tight text-zinc-900 dark:text-zinc-50">
+          {/* Wordmark */}
+          <span className="font-semibold text-[15px] tracking-tight text-foreground select-none">
             TradeLab
           </span>
-          <Badge variant="secondary" className="font-normal text-xs text-zinc-500 pointer-events-none">
-            AI Trading Research
-          </Badge>
+          {/* Visual separator */}
+          <span className="w-px h-3.5 bg-border" aria-hidden="true" />
+          {/* Eyebrow label */}
+          <span className="tl-label text-muted-foreground/70 hidden sm:block">
+            AI Experiment Builder
+          </span>
         </div>
-        <div>
-          <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
+
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground/60"
+            aria-label="Research workspace"
+          >
+            {/* Live indicator dot */}
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500/70"
+              aria-hidden="true"
+            />
             Research Workspace
           </span>
         </div>

@@ -6,25 +6,33 @@ import { parseHoldingPeriod } from "../utils/parse-clarification";
 import { validateExperiment } from "../utils/validate-experiment";
 import { toBacktestDefinition } from "../utils/to-backtest-definition";
 import { EditableField } from "./editable-field";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-
-import { RiCheckLine, RiInformationLine, RiCodeSSlashLine, RiFileCopyLine, RiCheckboxCircleLine } from "@remixicon/react";
 import { ClarificationPanel } from "./clarification-panel";
+
+import {
+  RiCheckLine,
+  RiAlertLine,
+  RiInformationLine,
+  RiCodeSSlashLine,
+  RiFileCopyLine,
+  RiCheckboxCircleLine,
+} from "@remixicon/react";
 
 interface ExperimentResultProps {
   experiment: TradingExperiment;
   onUpdate?: (experiment: TradingExperiment) => void;
 }
 
-export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps) {
+export function ExperimentResult({
+  experiment,
+  onUpdate,
+}: ExperimentResultProps) {
   const [jsonVisible, setJsonVisible] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [holdingPeriodError, setHoldingPeriodError] = useState<string | undefined>();
+  const [holdingPeriodError, setHoldingPeriodError] = useState<
+    string | undefined
+  >();
 
-  // Helpers to format fields
+  // Field display helpers
   const getInstrument = () => experiment.instrument || "Not specified";
   const getEntryCondition = () => experiment.entryCondition || "Not specified";
   const getExitCondition = () => experiment.exitCondition || "Not specified";
@@ -32,6 +40,7 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
     if (experiment.timeframe.value === "unknown") return "Not specified";
     return experiment.timeframe.description || experiment.timeframe.value;
   };
+
   const hasValidHoldingPeriod =
     experiment.holdingPeriod.value !== null &&
     experiment.holdingPeriod.unit !== "unknown";
@@ -39,17 +48,18 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
 
   const getHoldingPeriod = (): string => {
     if (hasValidHoldingPeriod) {
-      return experiment.holdingPeriod.description ||
-        `${experiment.holdingPeriod.value} ${experiment.holdingPeriod.unit}`;
+      return (
+        experiment.holdingPeriod.description ||
+        `${experiment.holdingPeriod.value} ${experiment.holdingPeriod.unit}`
+      );
     }
-    if (hasExitCondition) {
-      return "Not specified — exit condition used";
-    }
+    if (hasExitCondition) return "Not specified — exit condition used";
     return "Needs clarification";
   };
 
   const holdingPeriodIsWarning = !hasValidHoldingPeriod && !hasExitCondition;
-  const holdingPeriodUsesExitCondition = !hasValidHoldingPeriod && hasExitCondition;
+  const holdingPeriodUsesExitCondition =
+    !hasValidHoldingPeriod && hasExitCondition;
 
   const isReady = experiment.status === "ready";
   const needsClarification = experiment.status === "needs_clarification";
@@ -65,193 +75,270 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
   };
 
   return (
-    <div className="w-full flex flex-col gap-6 mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {isReady && (
-        <div className="flex items-center gap-2 text-green-600 dark:text-green-500 font-medium px-2">
-          <RiCheckLine className="w-5 h-5" />
-          <span>Experiment ready</span>
+    <div className="w-full flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-3 duration-400">
+
+      {/* ── Status banner ─────────────────────────────────────── */}
+      <div
+        className={[
+          "flex items-center gap-2.5 px-4 py-2.5 rounded-md text-[13px] font-medium border",
+          isReady
+            ? "bg-[var(--tl-green-bg)] border-[var(--tl-green-border)] text-[var(--tl-green)]"
+            : "bg-[var(--tl-amber-bg)] border-[var(--tl-amber-border)] text-[var(--tl-amber)]",
+        ].join(" ")}
+        role="status"
+      >
+        {isReady ? (
+          <RiCheckLine className="w-4 h-4 shrink-0" aria-hidden="true" />
+        ) : (
+          <RiAlertLine className="w-4 h-4 shrink-0" aria-hidden="true" />
+        )}
+        <span>
+          {isReady
+            ? "Experiment ready — all required fields are structured."
+            : "Experiment needs clarification before it can be considered ready."}
+        </span>
+      </div>
+
+      {/* ── Experiment card ───────────────────────────────────── */}
+      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+
+        {/* Card header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/20">
+          <p className="tl-label">Experiment Interpretation</p>
         </div>
-      )}
 
-      <Card className="rounded-xl border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 overflow-hidden">
-        <CardHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-900 pb-4">
-          <CardTitle className="text-base text-zinc-800 dark:text-zinc-200">
-            Experiment Interpretation
-          </CardTitle>
-        </CardHeader>
-        
-        <CardContent className="p-6 flex flex-col gap-8">
-          {/* Main components */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <EditableField 
-              label="Instrument"
-              value={experiment.instrument || ""}
-              displayValue={getInstrument()}
-              onSave={(val) => {
-                const updated = { ...experiment, instrument: val.trim() || null };
-                onUpdate?.(validateExperiment(updated));
-              }}
-            />
-            <EditableField 
-              label="Entry Condition"
-              value={experiment.entryCondition || ""}
-              displayValue={getEntryCondition()}
-              onSave={(val) => {
-                const updated = { ...experiment, entryCondition: val.trim() || null };
-                onUpdate?.(validateExperiment(updated));
-              }}
-            />
-          </div>
+        {/* Fields — definition list layout */}
+        <div className="px-5 py-5 flex flex-col gap-0 divide-y divide-[var(--tl-divider)]">
 
-          <Separator className="bg-zinc-100 dark:bg-zinc-800" />
-
-          {/* Secondary components */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <EditableField 
-              label="Timeframe"
-              type="select"
-              value={experiment.timeframe.value}
-              displayValue={getTimeframe()}
-              options={[
-                { label: "Intraday", value: "intraday" },
-                { label: "Daily", value: "daily" },
-                { label: "Weekly", value: "weekly" },
-                { label: "Monthly", value: "monthly" },
-                { label: "Unknown", value: "unknown" },
-              ]}
-              onSave={(val) => {
-                const updated = { 
-                  ...experiment, 
-                  timeframe: { value: val as Timeframe, description: null }
-                };
-                onUpdate?.(validateExperiment(updated));
-              }}
-            />
-            <EditableField 
-              label="Holding Period"
-              value={
-                hasValidHoldingPeriod
-                  ? `${experiment.holdingPeriod.value} ${experiment.holdingPeriod.unit}`
-                  : ""
-              }
-              displayValue={getHoldingPeriod()}
-              isWarning={holdingPeriodIsWarning}
-              placeholder="e.g. 5 days, 2 weeks"
-              error={holdingPeriodError}
-              onErrorChange={setHoldingPeriodError}
-              onSave={(val) => {
-                const trimmed = val.trim();
-                if (!trimmed) {
-                  setHoldingPeriodError(undefined);
+          <FieldRow
+            label="Instrument"
+            isWarning={!experiment.instrument}
+            editableField={
+              <EditableField
+                label="Instrument"
+                value={experiment.instrument || ""}
+                displayValue={getInstrument()}
+                onSave={(val) => {
                   const updated = {
                     ...experiment,
-                    holdingPeriod: {
-                      value: null,
-                      unit: "unknown" as const,
-                      description: null,
-                    },
+                    instrument: val.trim() || null,
                   };
                   onUpdate?.(validateExperiment(updated));
-                  return;
-                }
+                }}
+              />
+            }
+          />
 
-                const parsed = parseHoldingPeriod(trimmed);
-                if (!parsed) {
-                  setHoldingPeriodError('Use a format like "5 days" or "2 weeks".');
-                  return false;
-                }
+          <FieldRow
+            label="Entry Condition"
+            isWarning={!experiment.entryCondition}
+            editableField={
+              <EditableField
+                label="Entry Condition"
+                value={experiment.entryCondition || ""}
+                displayValue={getEntryCondition()}
+                onSave={(val) => {
+                  const updated = {
+                    ...experiment,
+                    entryCondition: val.trim() || null,
+                  };
+                  onUpdate?.(validateExperiment(updated));
+                }}
+              />
+            }
+          />
 
-                setHoldingPeriodError(undefined);
-                const updated = { ...experiment, holdingPeriod: parsed };
-                onUpdate?.(validateExperiment(updated));
-              }}
-            />
-            {holdingPeriodUsesExitCondition && (
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                Using exit condition as the exit rule
-              </p>
+          <FieldRow
+            label="Timeframe"
+            editableField={
+              <EditableField
+                label="Timeframe"
+                type="select"
+                value={experiment.timeframe.value}
+                displayValue={getTimeframe()}
+                options={[
+                  { label: "Intraday", value: "intraday" },
+                  { label: "Daily", value: "daily" },
+                  { label: "Weekly", value: "weekly" },
+                  { label: "Monthly", value: "monthly" },
+                  { label: "Unknown", value: "unknown" },
+                ]}
+                onSave={(val) => {
+                  const updated = {
+                    ...experiment,
+                    timeframe: { value: val as Timeframe, description: null },
+                  };
+                  onUpdate?.(validateExperiment(updated));
+                }}
+              />
+            }
+          />
+
+          <FieldRow
+            label="Holding Period"
+            isWarning={holdingPeriodIsWarning}
+            editableField={
+              <div className="flex flex-col gap-1">
+                <EditableField
+                  label="Holding Period"
+                  value={
+                    hasValidHoldingPeriod
+                      ? `${experiment.holdingPeriod.value} ${experiment.holdingPeriod.unit}`
+                      : ""
+                  }
+                  displayValue={getHoldingPeriod()}
+                  isWarning={holdingPeriodIsWarning}
+                  placeholder="e.g. 5 days, 2 weeks"
+                  error={holdingPeriodError}
+                  onErrorChange={setHoldingPeriodError}
+                  onSave={(val) => {
+                    const trimmed = val.trim();
+                    if (!trimmed) {
+                      setHoldingPeriodError(undefined);
+                      const updated = {
+                        ...experiment,
+                        holdingPeriod: {
+                          value: null,
+                          unit: "unknown" as const,
+                          description: null,
+                        },
+                      };
+                      onUpdate?.(validateExperiment(updated));
+                      return;
+                    }
+                    const parsed = parseHoldingPeriod(trimmed);
+                    if (!parsed) {
+                      setHoldingPeriodError(
+                        'Use a format like "5 days" or "2 weeks".'
+                      );
+                      return false;
+                    }
+                    setHoldingPeriodError(undefined);
+                    const updated = { ...experiment, holdingPeriod: parsed };
+                    onUpdate?.(validateExperiment(updated));
+                  }}
+                />
+                {holdingPeriodUsesExitCondition && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Using exit condition as the exit rule.
+                  </p>
+                )}
+              </div>
+            }
+          />
+
+          <FieldRow
+            label="Exit Condition"
+            editableField={
+              <EditableField
+                label="Exit Condition"
+                value={experiment.exitCondition || ""}
+                displayValue={getExitCondition()}
+                onSave={(val) => {
+                  const updated = {
+                    ...experiment,
+                    exitCondition: val.trim() || null,
+                  };
+                  onUpdate?.(validateExperiment(updated));
+                }}
+              />
+            }
+          />
+
+          <FieldRow
+            label="Filters"
+            editableField={
+              <EditableField
+                label="Filters"
+                value={experiment.filters.join(", ")}
+                displayValue={
+                  experiment.filters.length === 0 ? (
+                    <span className="text-muted-foreground/60">None</span>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {experiment.filters.map((filter, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center text-[12px] font-medium font-mono px-2 py-0.5 bg-muted rounded border border-border text-foreground"
+                        >
+                          {filter}
+                        </span>
+                      ))}
+                    </div>
+                  )
+                }
+                onSave={(val) => {
+                  const filters = val
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+                  const updated = { ...experiment, filters };
+                  onUpdate?.(validateExperiment(updated));
+                }}
+              />
+            }
+          />
+        </div>
+
+        {/* Research question */}
+        <div className="mx-5 mb-5 px-4 py-3.5 rounded-md border border-border bg-muted/20">
+          <p className="tl-label mb-2">Research Question</p>
+          <p className="text-[14px] text-foreground/80 leading-relaxed italic">
+            &ldquo;{experiment.researchQuestion}&rdquo;
+          </p>
+        </div>
+
+        {/* Ambiguities & Assumptions */}
+        {(experiment.ambiguities.length > 0 ||
+          experiment.assumptions.length > 0) && (
+          <div className="border-t border-border">
+
+            {experiment.ambiguities.length > 0 && (
+              <div className="mx-5 my-4 flex flex-col gap-2.5">
+                <div className="flex items-center gap-2 text-[var(--tl-amber)]">
+                  <RiAlertLine className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  <p className="tl-label" style={{ color: "var(--tl-amber)" }}>
+                    Potential {experiment.ambiguities.length === 1 ? "Ambiguity" : "Ambiguities"}
+                  </p>
+                </div>
+                <ul className="flex flex-col gap-2">
+                  {experiment.ambiguities.map((ambiguity, i) => (
+                    <li
+                      key={i}
+                      className="text-[13px] text-muted-foreground leading-relaxed pl-3 border-l-2 border-[var(--tl-amber-border)]"
+                    >
+                      {ambiguity}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {experiment.assumptions.length > 0 && (
+              <div className={`mx-5 mb-4 flex flex-col gap-2.5 ${experiment.ambiguities.length > 0 ? "mt-0 pt-3 border-t border-border" : "mt-4"}`}>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <RiInformationLine className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  <p className="tl-label">
+                    {experiment.assumptions.length === 1 ? "Assumption" : "Assumptions"}
+                  </p>
+                </div>
+                <ul className="flex flex-col gap-1.5">
+                  {experiment.assumptions.map((assumption, i) => (
+                    <li
+                      key={i}
+                      className="text-[13px] text-muted-foreground/80 leading-relaxed pl-3 border-l-2 border-border"
+                    >
+                      {assumption}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <EditableField 
-              label="Exit Condition"
-              value={experiment.exitCondition || ""}
-              displayValue={getExitCondition()}
-              onSave={(val) => {
-                const updated = { ...experiment, exitCondition: val.trim() || null };
-                onUpdate?.(validateExperiment(updated));
-              }}
-            />
-            <EditableField 
-              label="Filters"
-              value={experiment.filters.join(", ")}
-              displayValue={
-                experiment.filters.length === 0 ? (
-                  "None"
-                ) : (
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {experiment.filters.map((filter, i) => (
-                      <Badge key={i} variant="secondary" className="rounded-md font-normal text-sm px-2.5 py-0.5">
-                        {filter}
-                      </Badge>
-                    ))}
-                  </div>
-                )
-              }
-              onSave={(val) => {
-                const filters = val.split(",").map(s => s.trim()).filter(Boolean);
-                const updated = { ...experiment, filters };
-                onUpdate?.(validateExperiment(updated));
-              }}
-            />
-          </div>
+        )}
+      </div>
 
-          <Separator className="bg-zinc-100 dark:bg-zinc-800" />
-
-          {/* Original Question */}
-          <div className="flex flex-col gap-2 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
-            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Research Question</span>
-            <span className="text-base italic text-zinc-700 dark:text-zinc-300">&quot;{experiment.researchQuestion}&quot;</span>
-          </div>
-
-          {/* Ambiguities & Assumptions */}
-          {(experiment.ambiguities.length > 0 || experiment.assumptions.length > 0) && (
-            <div className="flex flex-col gap-6 pt-2">
-              {experiment.ambiguities.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-500">
-                    <RiInformationLine className="w-4 h-4" />
-                    <span className="text-sm font-semibold uppercase tracking-wider">Potential Ambiguity</span>
-                  </div>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {experiment.ambiguities.map((ambiguity, i) => (
-                      <li key={i} className="text-sm text-zinc-600 dark:text-zinc-400">{ambiguity}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {experiment.assumptions.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-500">
-                    <RiInformationLine className="w-4 h-4" />
-                    <span className="text-sm font-semibold uppercase tracking-wider">Assumptions</span>
-                  </div>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {experiment.assumptions.map((assumption, i) => (
-                      <li key={i} className="text-sm text-zinc-600 dark:text-zinc-400">{assumption}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
-        </CardContent>
-      </Card>
-
-      {/* Clarification Panel */}
+      {/* ── Clarification panel ───────────────────────────────── */}
       {needsClarification && onUpdate && (
         <ClarificationPanel
           experiment={experiment}
@@ -259,54 +346,112 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
         />
       )}
 
-      {/* Backtest JSON Panel */}
-      <Card className="rounded-xl border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 overflow-hidden">
-        <CardHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-900 pb-3 pt-4 px-5">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                Backtest-ready definition
-              </span>
-              {!isReady && (
-                <span className="text-xs text-amber-600 dark:text-amber-500">
-                  Complete required fields before running a backtest.
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopy}
-                className="h-8 px-3 text-xs text-zinc-600 dark:text-zinc-400 gap-1.5"
-              >
-                {copied ? (
-                  <><RiCheckboxCircleLine className="w-3.5 h-3.5 text-green-600" /> Copied</>
-                ) : (
-                  <><RiFileCopyLine className="w-3.5 h-3.5" /> Copy JSON</>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setJsonVisible((v) => !v)}
-                className="h-8 px-3 text-xs text-zinc-600 dark:text-zinc-400 gap-1.5"
-              >
-                <RiCodeSSlashLine className="w-3.5 h-3.5" />
-                {jsonVisible ? "Hide JSON" : "View JSON"}
-              </Button>
-            </div>
+      {/* ── Backtest definition panel ─────────────────────────── */}
+      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+        <div className="flex items-center justify-between px-5 py-4">
+          <div className="flex flex-col gap-0.5">
+            <p className="tl-label">Backtest-Ready Definition</p>
+            {!isReady && (
+              <p className="text-[11px] text-[var(--tl-amber)] mt-0.5">
+                Complete required fields before running a backtest.
+              </p>
+            )}
           </div>
-        </CardHeader>
+
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors duration-150 px-3 py-1.5 rounded-md hover:bg-muted/50"
+              aria-label="Copy JSON to clipboard"
+            >
+              {copied ? (
+                <>
+                  <RiCheckboxCircleLine
+                    className="w-3.5 h-3.5 text-[var(--tl-green)]"
+                    aria-hidden="true"
+                  />
+                  <span className="text-[var(--tl-green)]">Copied</span>
+                </>
+              ) : (
+                <>
+                  <RiFileCopyLine className="w-3.5 h-3.5" aria-hidden="true" />
+                  Copy JSON
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setJsonVisible((v) => !v)}
+              className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground transition-colors duration-150 px-3 py-1.5 rounded-md hover:bg-muted/50"
+              aria-expanded={jsonVisible}
+              aria-controls="json-panel"
+            >
+              <RiCodeSSlashLine className="w-3.5 h-3.5" aria-hidden="true" />
+              {jsonVisible ? "Hide" : "View JSON"}
+            </button>
+          </div>
+        </div>
+
         {jsonVisible && (
-          <CardContent className="p-0">
-            <pre className="text-xs leading-relaxed font-mono text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-900/60 p-5 overflow-x-auto">
+          <div
+            id="json-panel"
+            className="border-t border-border animate-in fade-in slide-in-from-top-1 duration-200"
+          >
+            <pre
+              className={[
+                "text-[12px] leading-relaxed",
+                "font-mono",
+                "text-foreground/80",
+                "bg-[var(--tl-surface-code)]",
+                "px-5 py-4",
+                "overflow-x-auto",
+                "scrollbar-thin",
+              ].join(" ")}
+            >
               {jsonString}
             </pre>
-          </CardContent>
+          </div>
         )}
-      </Card>
+      </div>
+    </div>
+  );
+}
 
+/* ── Field row layout helper ─────────────────────────────── */
+function FieldRow({
+  label,
+  editableField,
+  isWarning = false,
+}: {
+  label: string;
+  editableField: React.ReactNode;
+  isWarning?: boolean;
+}) {
+  return (
+    <div
+      className={[
+        "grid grid-cols-[140px_1fr] gap-4 items-start py-4",
+        isWarning ? "relative" : "",
+      ].join(" ")}
+    >
+      {/* Warning accent bar */}
+      {isWarning && (
+        <span
+          className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-[var(--tl-amber-border)]"
+          aria-hidden="true"
+        />
+      )}
+      <span
+        className={[
+          "tl-label pt-[3px]",
+          isWarning ? "text-[var(--tl-amber)] pl-2.5" : "text-muted-foreground",
+        ].join(" ")}
+      >
+        {label}
+      </span>
+      <div>{editableField}</div>
     </div>
   );
 }

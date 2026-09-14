@@ -1,8 +1,6 @@
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RiCheckLine, RiCloseLine } from "@remixicon/react";
+import { RiCheckLine, RiCloseLine, RiPencilLine } from "@remixicon/react";
 import { cn } from "cn";
 
 interface EditableFieldProps {
@@ -19,18 +17,18 @@ interface EditableFieldProps {
   validate?: (value: string) => string | undefined | null;
 }
 
-export function EditableField({ 
-  label, 
-  value, 
-  displayValue, 
-  onSave, 
-  type = "text", 
+export function EditableField({
+  label,
+  value,
+  displayValue,
+  onSave,
+  type = "text",
   options = [],
   placeholder,
   isWarning = false,
   error,
   onErrorChange,
-  validate
+  validate,
 }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [currentValue, setCurrentValue] = useState(value);
@@ -53,9 +51,7 @@ export function EditableField({
       }
     }
     const result = onSave(currentValue);
-    if (result === false) {
-      return;
-    }
+    if (result === false) return;
     clearError();
     setIsEditing(false);
   };
@@ -69,40 +65,54 @@ export function EditableField({
   const inputId = `editable-field-${label.toLowerCase().replace(/\s+/g, "-")}`;
   const errorId = `${inputId}-error`;
 
+  // ── Display mode ──────────────────────────────────────────
   if (!isEditing) {
     return (
-      <div className="flex flex-col gap-1 group relative">
-        <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center justify-between">
-          {label}
-          <button 
-            type="button"
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] uppercase font-bold text-blue-600 hover:text-blue-800"
-            onClick={() => {
-              setCurrentValue(value);
-              clearError();
-              setIsEditing(true);
-            }}
-          >
-            Edit
-          </button>
+      <div className="group flex items-start justify-between gap-2 min-h-[26px]">
+        <span
+          className={cn(
+            "text-[14px] leading-snug transition-colors duration-100",
+            isWarning
+              ? "text-[var(--tl-amber)] font-medium"
+              : "text-foreground"
+          )}
+        >
+          {displayValue !== undefined ? displayValue : value || "Not specified"}
         </span>
-        <div className="flex items-center min-h-[24px]">
-          <span className={`text-base ${isWarning ? "text-amber-600 dark:text-amber-500 font-medium" : "text-zinc-900 dark:text-zinc-100"}`}>
-            {displayValue !== undefined ? displayValue : (value || "Not specified")}
-          </span>
-        </div>
+
+        {/* Edit affordance — appears on group hover */}
+        <button
+          type="button"
+          aria-label={`Edit ${label}`}
+          onClick={() => {
+            setCurrentValue(value);
+            clearError();
+            setIsEditing(true);
+          }}
+          className={cn(
+            "shrink-0 mt-0.5",
+            "opacity-0 group-hover:opacity-100",
+            "transition-opacity duration-150",
+            "p-1 rounded",
+            "text-muted-foreground/50 hover:text-muted-foreground",
+            "hover:bg-muted/60",
+          )}
+        >
+          <RiPencilLine className="w-3 h-3" aria-hidden="true" />
+        </button>
       </div>
     );
   }
 
+  // ── Edit mode ─────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-        {label}
-      </span>
+    <div className="flex flex-col gap-1.5 animate-in fade-in duration-150">
       <div className="flex items-center gap-2">
         {type === "select" ? (
-          <Select value={currentValue} onValueChange={(val) => setCurrentValue(val || "")}>
+          <Select
+            value={currentValue}
+            onValueChange={(val) => setCurrentValue(val || "")}
+          >
             <SelectTrigger className="h-8 text-sm w-full">
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
@@ -115,19 +125,23 @@ export function EditableField({
             </SelectContent>
           </Select>
         ) : (
-          <Input 
+          <input
             id={inputId}
-            value={currentValue} 
+            type="text"
+            value={currentValue}
             onChange={(e) => {
               setCurrentValue(e.target.value);
-              if (activeError) {
-                clearError();
-              }
-            }} 
+              if (activeError) clearError();
+            }}
             placeholder={placeholder}
             className={cn(
-              "h-8 text-sm",
-              activeError && "border-red-500 focus-visible:ring-red-500 dark:border-red-500"
+              "flex-1 h-8 text-sm px-2.5",
+              "bg-background text-foreground",
+              "border border-border rounded-md",
+              "outline-none transition-all duration-150",
+              "focus:border-foreground/40 focus:ring-1 focus:ring-foreground/15",
+              activeError &&
+                "border-destructive focus:border-destructive focus:ring-destructive/20"
             )}
             aria-invalid={Boolean(activeError)}
             aria-describedby={activeError ? errorId : undefined}
@@ -138,23 +152,37 @@ export function EditableField({
             }}
           />
         )}
-        <div className="flex items-center gap-1 shrink-0">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={handleSave}>
-            <RiCheckLine className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-zinc-600" onClick={handleCancel}>
-            <RiCloseLine className="w-4 h-4" />
-          </Button>
+
+        {/* Save / Cancel */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            type="button"
+            aria-label="Save"
+            onClick={handleSave}
+            className="flex items-center justify-center w-7 h-7 rounded text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors duration-100"
+          >
+            <RiCheckLine className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            aria-label="Cancel"
+            onClick={handleCancel}
+            className="flex items-center justify-center w-7 h-7 rounded text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/50 transition-colors duration-100"
+          >
+            <RiCloseLine className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
         </div>
       </div>
+
+      {/* Validation error */}
       {activeError && (
-        <span
+        <p
           id={errorId}
           role="alert"
-          className="text-xs text-red-600 dark:text-red-400 font-medium mt-0.5"
+          className="text-[11px] text-destructive font-medium"
         >
           {activeError}
-        </span>
+        </p>
       )}
     </div>
   );

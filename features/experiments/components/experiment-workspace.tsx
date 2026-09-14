@@ -4,7 +4,6 @@ import { useState } from "react";
 import { ExperimentInput } from "./experiment-input";
 import { ExperimentResult } from "./experiment-result";
 import { TradingExperiment } from "../types/experiment.types";
-import { Button } from "@/components/ui/button";
 
 export function ExperimentWorkspace() {
   const [experiment, setExperiment] = useState<TradingExperiment | null>(null);
@@ -14,29 +13,41 @@ export function ExperimentWorkspace() {
   };
 
   return (
-    <div className="flex flex-col flex-1 w-full max-w-4xl mx-auto px-6 py-16 md:py-24">
-      <div className="flex flex-col gap-3 mb-10 text-center md:text-left">
-        <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Turn a trading idea into an experiment
+    <div className="w-full max-w-3xl mx-auto px-5 sm:px-8 py-12 sm:py-16 flex flex-col gap-10">
+
+      {/* Hero heading */}
+      <div className="flex flex-col gap-4">
+        <p className="tl-label text-muted-foreground/70">
+          Research Hypothesis
+        </p>
+        <h1 className="font-heading font-light text-[2rem] sm:text-[2.5rem] leading-[1.15] tracking-[-0.03em] text-foreground">
+          Turn a market hypothesis<br className="hidden sm:block" />
+          <span className="font-heading font-semibold"> into a structured experiment.</span>
         </h1>
-        <p className="text-lg text-zinc-500 dark:text-zinc-400 max-w-3xl">
-          Describe your trading hypothesis in plain English. TradeLab will identify the experiment structure and highlight anything that needs clarification.
+        <p className="text-[15px] text-muted-foreground leading-relaxed max-w-[520px]">
+          Describe your trading idea in plain English. TradeLab extracts the
+          experiment structure and flags anything that needs clarification before
+          a backtest can run.
         </p>
       </div>
-      
-      {!experiment ? (
-        <ExperimentInput onSuccess={handleAnalyzeSuccess} />
-      ) : (
-        <div className="flex flex-col gap-6">
-          <ExperimentInput onSuccess={handleAnalyzeSuccess} />
+
+      {/* Composer */}
+      <ExperimentInput onSuccess={handleAnalyzeSuccess} />
+
+      {/* Result */}
+      {experiment && (
+        <div className="flex flex-col gap-8">
           <ExperimentResult experiment={experiment} onUpdate={setExperiment} />
-          <div className="flex justify-center mt-6">
-            <Button 
-              variant="outline" 
+
+          {/* Reset */}
+          <div className="flex justify-center pb-10">
+            <button
+              type="button"
               onClick={() => setExperiment(null)}
+              className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150 border border-border hover:border-foreground/20 rounded-md px-4 py-2 bg-transparent"
             >
-              Start new experiment
-            </Button>
+              ← Start a new experiment
+            </button>
           </div>
         </div>
       )}

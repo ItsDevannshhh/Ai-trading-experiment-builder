@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { RiMagicLine } from "@remixicon/react";
+import { RiFlaskLine } from "@remixicon/react";
 import { ExampleQuestions } from "./example-questions";
 import { analyzeExperiment } from "../api/analyze-experiment";
 import { TradingExperiment } from "../types/experiment.types";
@@ -30,38 +28,82 @@ export function ExperimentInput({ onSuccess }: ExperimentInputProps) {
   };
 
   return (
-    <div className="w-full flex flex-col gap-4">
-      <div className="relative">
-        <Textarea
-          placeholder="Example: Does buying NIFTY after a 1% fall work better during high-volatility periods?"
-          className="min-h-[160px] resize-none text-base md:text-base p-5 pb-16 shadow-sm rounded-xl bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 focus-visible:ring-1 focus-visible:ring-zinc-400 dark:focus-visible:ring-zinc-600 disabled:opacity-50"
+    <div className="w-full flex flex-col gap-5">
+      {/* Composer */}
+      <div className="relative group">
+        <textarea
+          placeholder="e.g. Does buying NIFTY after a 1% fall produce positive returns over 5 trading days during high-volatility periods?"
+          className={[
+            "w-full min-h-[156px] resize-none text-[15px] leading-relaxed",
+            "px-5 pt-5 pb-[60px]",
+            "bg-card text-foreground placeholder:text-muted-foreground/50",
+            "border border-border rounded-lg shadow-sm",
+            "outline-none transition-all duration-150",
+            "focus:border-foreground/30 focus:ring-2 focus:ring-foreground/8 focus:shadow-md",
+            "disabled:opacity-50 disabled:cursor-not-allowed",
+          ].join(" ")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           disabled={isPending}
           aria-label="Trading hypothesis"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !isPending) {
+              handleAnalyze();
+            }
+          }}
         />
-        <div className="absolute bottom-4 right-4 flex items-center gap-2">
-          <Button 
-            onClick={handleAnalyze} 
+
+        {/* Bottom toolbar */}
+        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 border-t border-border/60 bg-muted/30 rounded-b-lg">
+          <span className="text-[10px] text-muted-foreground/50 hidden sm:block select-none">
+            {isPending ? "Analyzing…" : "⌘ + Enter to analyze"}
+          </span>
+
+          <button
+            type="button"
+            onClick={handleAnalyze}
             disabled={!query.trim() || isPending}
-            className="gap-2 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className={[
+              "ml-auto inline-flex items-center gap-2",
+              "text-[13px] font-medium",
+              "px-4 py-1.5 rounded-md",
+              "transition-all duration-150",
+              "disabled:opacity-40 disabled:cursor-not-allowed",
+              "bg-foreground text-background hover:opacity-90 active:opacity-80",
+            ].join(" ")}
+            aria-label={isPending ? "Analyzing experiment" : "Analyze experiment"}
           >
             {isPending ? (
-              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <>
+                <span
+                  className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"
+                  aria-hidden="true"
+                />
+                Analyzing…
+              </>
             ) : (
-              <RiMagicLine className="w-4 h-4" />
+              <>
+                <RiFlaskLine className="w-3.5 h-3.5" aria-hidden="true" />
+                Analyze
+              </>
             )}
-            {isPending ? "Analyzing..." : "Analyze Experiment"}
-          </Button>
+          </button>
         </div>
       </div>
 
+      {/* Error state */}
       {error && (
-        <p role="alert" className="text-sm text-red-500 font-medium px-1">
-          {error instanceof Error ? error.message : "Something went wrong while analyzing your experiment."}
+        <p
+          role="alert"
+          className="text-[13px] text-destructive font-medium px-1"
+        >
+          {error instanceof Error
+            ? error.message
+            : "Something went wrong while analyzing your experiment. Please try again."}
         </p>
       )}
 
+      {/* Examples */}
       <ExampleQuestions onSelect={setQuery} />
     </div>
   );

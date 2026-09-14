@@ -1,7 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-
 const EXAMPLES = [
   "Does buying NIFTY after a 1% fall work better during high-volatility periods?",
   "Does buying NIFTY after a 1% daily fall and holding for 5 trading days produce positive returns?",
@@ -14,18 +12,35 @@ interface ExampleQuestionsProps {
 
 export function ExampleQuestions({ onSelect }: ExampleQuestionsProps) {
   return (
-    <div className="flex flex-col gap-3 mt-4">
-      <p className="text-sm text-zinc-500 font-medium">Try an example</p>
-      <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-3">
+      <p className="tl-label text-muted-foreground/60">Try an example</p>
+
+      <div className="flex flex-col sm:flex-row flex-wrap gap-2">
         {EXAMPLES.map((example, i) => (
-          <Badge
+          <button
             key={i}
-            variant="secondary"
-            className="cursor-pointer font-normal hover:bg-secondary/80 text-xs sm:text-sm py-1.5 px-3 transition-colors text-left h-auto whitespace-normal rounded-md"
+            type="button"
             onClick={() => onSelect(example)}
+            className={[
+              "group text-left text-[13px] text-muted-foreground",
+              "px-3.5 py-2.5 rounded-md",
+              "border border-border bg-card",
+              "hover:border-foreground/20 hover:bg-muted/40 hover:text-foreground",
+              "transition-all duration-150",
+              "flex items-center justify-between gap-3",
+              "sm:max-w-[calc(50%-4px)] lg:max-w-none",
+            ].join(" ")}
           >
-            {example}
-          </Badge>
+            <span className="leading-snug">
+              &ldquo;{example}&rdquo;
+            </span>
+            <span
+              className="shrink-0 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors duration-150 text-base leading-none"
+              aria-hidden="true"
+            >
+              →
+            </span>
+          </button>
         ))}
       </div>
     </div>
