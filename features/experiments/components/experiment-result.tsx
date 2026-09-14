@@ -1,14 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { TradingExperiment, Timeframe } from "../types/experiment.types";
 import { parseHoldingPeriod } from "../utils/parse-clarification";
 import { validateExperiment } from "../utils/validate-experiment";
+import { toBacktestDefinition } from "../utils/to-backtest-definition";
 import { EditableField } from "./editable-field";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-import { RiErrorWarningLine, RiCheckLine, RiInformationLine } from "@remixicon/react";
+import { RiErrorWarningLine, RiCheckLine, RiInformationLine, RiCodeSSlashLine, RiFileCopyLine, RiCheckboxCircleLine } from "@remixicon/react";
 
 interface ExperimentResultProps {
   experiment: TradingExperiment;
@@ -16,6 +19,9 @@ interface ExperimentResultProps {
 }
 
 export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps) {
+  const [jsonVisible, setJsonVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   // Helpers to format fields
   const getInstrument = () => experiment.instrument || "Not specified";
   const getEntryCondition = () => experiment.entryCondition || "Not specified";
@@ -33,6 +39,16 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
 
   const isReady = experiment.status === "ready";
   const needsClarification = experiment.status === "needs_clarification";
+
+  const backtestDef = toBacktestDefinition(experiment);
+  const jsonString = JSON.stringify(backtestDef, null, 2);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(jsonString).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <div className="w-full flex flex-col gap-6 mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -197,6 +213,54 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
           )}
 
         </CardContent>
+      </Card>
+
+      {/* Backtest JSON Panel */}
+      <Card className="rounded-xl border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 overflow-hidden">
+        <CardHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-900 pb-3 pt-4 px-5">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                Backtest-ready definition
+              </span>
+              {!isReady && (
+                <span className="text-xs text-amber-600 dark:text-amber-500">
+                  Complete required fields before running a backtest.
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopy}
+                className="h-8 px-3 text-xs text-zinc-600 dark:text-zinc-400 gap-1.5"
+              >
+                {copied ? (
+                  <><RiCheckboxCircleLine className="w-3.5 h-3.5 text-green-600" /> Copied</>
+                ) : (
+                  <><RiFileCopyLine className="w-3.5 h-3.5" /> Copy JSON</>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setJsonVisible((v) => !v)}
+                className="h-8 px-3 text-xs text-zinc-600 dark:text-zinc-400 gap-1.5"
+              >
+                <RiCodeSSlashLine className="w-3.5 h-3.5" />
+                {jsonVisible ? "Hide JSON" : "View JSON"}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        {jsonVisible && (
+          <CardContent className="p-0">
+            <pre className="text-xs leading-relaxed font-mono text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-900/60 p-5 overflow-x-auto">
+              {jsonString}
+            </pre>
+          </CardContent>
+        )}
       </Card>
 
       {/* Clarification Warning (Compact) */}
