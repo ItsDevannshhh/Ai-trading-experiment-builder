@@ -4,14 +4,15 @@ import type { Clarification } from "@/features/ai/schemas/clarification.schema";
 export async function analyzeClarification(
   experiment: TradingExperiment,
   field: ExperimentField,
-  answer: string
+  answer: string,
+  ambiguity?: string
 ): Promise<Clarification> {
   const response = await fetch("/api/experiments/clarify", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ experiment, field, answer }),
+    body: JSON.stringify({ experiment, field, answer, ambiguity }),
   });
 
   if (!response.ok) {

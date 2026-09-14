@@ -7,7 +7,8 @@ import type { TradingExperiment, ExperimentField } from "@/features/experiments/
 export async function analyzeClarification(
   experiment: TradingExperiment,
   field: ExperimentField,
-  answer: string
+  answer: string,
+  ambiguity?: string
 ) {
   const trimmedAnswer = answer.trim();
 
@@ -20,7 +21,7 @@ Current Experiment Context:
 ${JSON.stringify(experiment, null, 2)}
 
 Target Field for Clarification: ${field}
-
+${ambiguity ? `Ambiguity being resolved: "${ambiguity}"\n` : ""}
 User's Clarification Answer:
 "${trimmedAnswer}"
 `;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TradingExperiment } from "../types/experiment.types";
+import { TradingExperiment, ExperimentField } from "../types/experiment.types";
 import type { Clarification } from "@/features/ai/schemas/clarification.schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,34 @@ const friendlyFieldNames: Record<string, string> = {
   filters: "filters"
 };
 
+function findRelevantFieldForAmbiguity(
+  experiment: TradingExperiment,
+  ambiguity: string
+): ExperimentField {
+  const amb = ambiguity.toLowerCase().trim();
+
+  if (experiment.entryCondition && experiment.entryCondition.toLowerCase().includes(amb)) {
+    return "entryCondition";
+  }
+  if (experiment.exitCondition && experiment.exitCondition.toLowerCase().includes(amb)) {
+    return "exitCondition";
+  }
+  if (experiment.instrument && experiment.instrument.toLowerCase().includes(amb)) {
+    return "instrument";
+  }
+  if (experiment.filters && experiment.filters.some((f) => f.toLowerCase().includes(amb))) {
+    return "filters";
+  }
+  if (experiment.timeframe.description && experiment.timeframe.description.toLowerCase().includes(amb)) {
+    return "timeframe";
+  }
+  if (experiment.holdingPeriod.description && experiment.holdingPeriod.description.toLowerCase().includes(amb)) {
+    return "holdingPeriod";
+  }
+
+  return "entryCondition";
+}
+
 function getClarificationValueString(clarification: Clarification): string {
   const f = clarification.field;
   if (f === "holdingPeriod" && clarification.holdingPeriod) {
@@ -55,12 +83,32 @@ export function ClarificationPanel({ experiment, onExperimentUpdate }: Clarifica
   const [error, setError] = useState<string | null>(null);
   const [pendingClarification, setPendingClarification] = useState<Clarification | null>(null);
 
-  const fieldToClarify = experiment.missingFields[0];
-  const question = fieldToClarify ? (clarificationQuestions[fieldToClarify] || "Please clarify this detail.") : "";
+  const hasMissingFields = experiment.missingFields.length > 0;
+  const hasAmbiguities = experiment.ambiguities.length > 0;
+
+  // First priority: missing fields
+  // Second priority: ambiguities
+  const isResolvingAmbiguity = !hasMissingFields && hasAmbiguities;
+
+  const missingFieldToClarify = hasMissingFields ? experiment.missingFields[0] : null;
+  const ambiguityToClarify = isResolvingAmbiguity ? experiment.ambiguities[0] : null;
+
+  const targetField: ExperimentField = isResolvingAmbiguity && ambiguityToClarify
+    ? findRelevantFieldForAmbiguity(experiment, ambiguityToClarify)
+    : (missingFieldToClarify ?? "entryCondition");
+
+  const question = isResolvingAmbiguity && ambiguityToClarify
+    ? `What does "${ambiguityToClarify}" mean?`
+    : (missingFieldToClarify ? (clarificationQuestions[missingFieldToClarify] || "Please clarify this detail.") : "");
 
   const mutation = useMutation({
     mutationFn: async (ans: string) => {
-      return analyzeClarification(experiment, fieldToClarify, ans);
+      return analyzeClarification(
+        experiment,
+        targetField,
+        ans,
+        ambiguityToClarify ?? undefined
+      );
     },
     onSuccess: (clarification) => {
       if (clarification.ambiguity) {
@@ -68,7 +116,7 @@ export function ClarificationPanel({ experiment, onExperimentUpdate }: Clarifica
         return;
       }
 
-      if (clarification.field !== fieldToClarify) {
+      if (clarification.field !== targetField) {
         setPendingClarification(clarification);
         return;
       }
@@ -76,7 +124,7 @@ export function ClarificationPanel({ experiment, onExperimentUpdate }: Clarifica
       applyAndFinish(clarification);
     },
     onError: () => {
-      if (fieldToClarify === "holdingPeriod") {
+      if (targetField === "holdingPeriod") {
         const parsed = parseHoldingPeriod(answer);
         if (parsed) {
           applyAndFinish({
@@ -98,7 +146,12 @@ export function ClarificationPanel({ experiment, onExperimentUpdate }: Clarifica
   });
 
   const applyAndFinish = (clarification: Clarification) => {
-    const updated = applyClarification(experiment, clarification);
+    const resolvedAmbiguity =
+      isResolvingAmbiguity && clarification.field === targetField
+        ? ambiguityToClarify ?? undefined
+        : undefined;
+
+    const updated = applyClarification(experiment, clarification, resolvedAmbiguity);
     onExperimentUpdate(updated);
     setAnswer("");
     setPendingClarification(null);
@@ -110,7 +163,7 @@ export function ClarificationPanel({ experiment, onExperimentUpdate }: Clarifica
     mutation.mutate(answer);
   };
 
-  if (experiment.missingFields.length === 0) {
+  if (!hasMissingFields && !hasAmbiguities) {
     return null;
   }
 
@@ -122,7 +175,7 @@ export function ClarificationPanel({ experiment, onExperimentUpdate }: Clarifica
         <CardContent className="p-5 flex flex-col gap-4">
           <div className="flex flex-col gap-3">
             <span className="text-base text-zinc-900 dark:text-zinc-100 font-medium">
-              That sounds like an {friendlyFieldNames[extractedField]} rather than a {friendlyFieldNames[fieldToClarify]}.
+              That sounds like an {friendlyFieldNames[extractedField]} rather than {isResolvingAmbiguity ? `a clarification for "${ambiguityToClarify}"` : `a ${friendlyFieldNames[targetField]}`}.
             </span>
             <span className="text-base text-zinc-700 dark:text-zinc-300">
               I understood it as: <span className="italic font-medium">&quot;{valueStr}&quot;</span>

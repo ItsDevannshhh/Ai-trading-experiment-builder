@@ -7,6 +7,7 @@ const requestSchema = z.object({
   experiment: experimentSchema,
   field: experimentFieldSchema,
   answer: z.string().min(1),
+  ambiguity: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -21,9 +22,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const { experiment, field, answer } = parsed.data;
+    const { experiment, field, answer, ambiguity } = parsed.data;
 
-    const clarification = await analyzeClarification(experiment, field, answer);
+    const clarification = await analyzeClarification(experiment, field, answer, ambiguity);
 
     return NextResponse.json({ clarification });
   } catch (error) {

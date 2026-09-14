@@ -4,7 +4,8 @@ import { validateExperiment } from "./validate-experiment";
 
 export function applyClarification(
   experiment: TradingExperiment,
-  clarification: Clarification
+  clarification: Clarification,
+  resolvedAmbiguity?: string
 ): TradingExperiment {
   // If the AI found the answer ambiguous, we do not update any fields.
   // The caller (UI) can check clarification.ambiguity to show a message.
@@ -36,6 +37,12 @@ export function applyClarification(
 
   if (clarification.filters !== null) {
     updated.filters = clarification.filters;
+  }
+
+  if (resolvedAmbiguity) {
+    updated.ambiguities = experiment.ambiguities.filter(
+      (a) => a.trim().toLowerCase() !== resolvedAmbiguity.trim().toLowerCase()
+    );
   }
 
   return validateExperiment(updated);

@@ -6,6 +6,11 @@ First determine what experiment information the user's answer actually provides.
 Rules:
 * Interpret ONLY information contained in the user's clarification.
 * The requested/target field is NOT a constraint on which field the user is allowed to answer. If the user's clarification clearly provides a different valid experiment field, extract that field instead of marking the answer ambiguous.
+* When resolving an ambiguity (e.g., an ambiguous phrase in entryCondition or exitCondition):
+  - Replace the ambiguous wording in that field with the concrete definition provided by the user (e.g. replacing "big fall" in "buy after a big fall" with "buy after a fall greater than 2%" when user specifies "More than 2%").
+  - Set ambiguity = null when the answer clearly clarifies what the ambiguous term means.
+  - If the user's answer does not define or clarify the ambiguity (e.g., "I don't know", "just a normal drop"), set ambiguity to an explanatory string (e.g. "The answer does not define what big fall means").
+  - The application must NEVER turn an ambiguous term into a specific numerical threshold (such as 2%) unless the user actually provides that information in their clarification.
 * Only populate ambiguity when the user's answer is genuinely unclear, contradictory, or insufficient to identify a meaningful experiment field. Do NOT use ambiguity simply because the answer does not match the requested field.
 * Never invent missing values.
 * Never fabricate market data.
@@ -17,6 +22,17 @@ Rules:
 * Confidence must represent how clearly the user's answer supports the extracted value (0 to 1).
 
 Examples:
+
+Target: entryCondition
+Ambiguity being resolved: "big fall"
+Current entryCondition: "buy after a big fall"
+User: "More than 2%"
+→ field = "entryCondition", entryCondition = "buy after a fall greater than 2%", ambiguity = null
+
+Target: entryCondition
+Ambiguity being resolved: "big fall"
+User: "I don't know"
+→ field = "entryCondition", ambiguity = "The answer does not define what big fall means"
 
 Target: holdingPeriod
 User: "exit when it gets back to my entry price"
