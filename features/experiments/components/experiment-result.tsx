@@ -1,6 +1,9 @@
 "use client";
 
-import { TradingExperiment } from "../types/experiment.types";
+import { TradingExperiment, Timeframe } from "../types/experiment.types";
+import { parseHoldingPeriod } from "../utils/parse-clarification";
+import { validateExperiment } from "../utils/validate-experiment";
+import { EditableField } from "./editable-field";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -9,9 +12,10 @@ import { RiErrorWarningLine, RiCheckLine, RiInformationLine } from "@remixicon/r
 
 interface ExperimentResultProps {
   experiment: TradingExperiment;
+  onUpdate?: (experiment: TradingExperiment) => void;
 }
 
-export function ExperimentResult({ experiment }: ExperimentResultProps) {
+export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps) {
   // Helpers to format fields
   const getInstrument = () => experiment.instrument || "Not specified";
   const getEntryCondition = () => experiment.entryCondition || "Not specified";
@@ -29,8 +33,6 @@ export function ExperimentResult({ experiment }: ExperimentResultProps) {
 
   const isReady = experiment.status === "ready";
   const needsClarification = experiment.status === "needs_clarification";
-
-
 
   return (
     <div className="w-full flex flex-col gap-6 mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -51,51 +53,106 @@ export function ExperimentResult({ experiment }: ExperimentResultProps) {
         <CardContent className="p-6 flex flex-col gap-8">
           {/* Main components */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Instrument</span>
-              <span className="text-base font-medium text-zinc-900 dark:text-zinc-100">{getInstrument()}</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Entry Condition</span>
-              <span className="text-base font-medium text-zinc-900 dark:text-zinc-100">{getEntryCondition()}</span>
-            </div>
+            <EditableField 
+              label="Instrument"
+              value={experiment.instrument || ""}
+              displayValue={getInstrument()}
+              onSave={(val) => {
+                const updated = { ...experiment, instrument: val.trim() || null };
+                onUpdate?.(validateExperiment(updated));
+              }}
+            />
+            <EditableField 
+              label="Entry Condition"
+              value={experiment.entryCondition || ""}
+              displayValue={getEntryCondition()}
+              onSave={(val) => {
+                const updated = { ...experiment, entryCondition: val.trim() || null };
+                onUpdate?.(validateExperiment(updated));
+              }}
+            />
           </div>
 
           <Separator className="bg-zinc-100 dark:bg-zinc-800" />
 
           {/* Secondary components */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Timeframe</span>
-              <span className="text-base text-zinc-800 dark:text-zinc-200">{getTimeframe()}</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Holding Period</span>
-              <span className={`text-base ${getHoldingPeriod() === "Needs clarification" ? "text-amber-600 dark:text-amber-500 font-medium" : "text-zinc-800 dark:text-zinc-200"}`}>
-                {getHoldingPeriod()}
-              </span>
-            </div>
+            <EditableField 
+              label="Timeframe"
+              type="select"
+              value={experiment.timeframe.value}
+              displayValue={getTimeframe()}
+              options={[
+                { label: "Intraday", value: "intraday" },
+                { label: "Daily", value: "daily" },
+                { label: "Weekly", value: "weekly" },
+                { label: "Monthly", value: "monthly" },
+                { label: "Unknown", value: "unknown" },
+              ]}
+              onSave={(val) => {
+                const updated = { 
+                  ...experiment, 
+                  timeframe: { value: val as Timeframe, description: null }
+                };
+                onUpdate?.(validateExperiment(updated));
+              }}
+            />
+            <EditableField 
+              label="Holding Period"
+              value={
+                experiment.holdingPeriod.value !== null && experiment.holdingPeriod.unit !== "unknown"
+                  ? `${experiment.holdingPeriod.value} ${experiment.holdingPeriod.unit}`
+                  : ""
+              }
+              displayValue={getHoldingPeriod()}
+              isWarning={getHoldingPeriod() === "Needs clarification"}
+              placeholder="e.g. 5 days, 2 weeks"
+              onSave={(val) => {
+                let newHoldingPeriod: typeof experiment.holdingPeriod = { value: null, unit: "unknown" as const, description: null };
+                if (val.trim()) {
+                  const parsed = parseHoldingPeriod(val);
+                  if (parsed) {
+                    newHoldingPeriod = parsed;
+                  }
+                }
+                const updated = { ...experiment, holdingPeriod: newHoldingPeriod };
+                onUpdate?.(validateExperiment(updated));
+              }}
+            />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Exit Condition</span>
-              <span className="text-base text-zinc-800 dark:text-zinc-200">{getExitCondition()}</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Filters</span>
-              {experiment.filters.length === 0 ? (
-                <span className="text-base text-zinc-800 dark:text-zinc-200">None</span>
-              ) : (
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {experiment.filters.map((filter, i) => (
-                    <Badge key={i} variant="secondary" className="rounded-md font-normal text-sm px-2.5 py-0.5">
-                      {filter}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
+            <EditableField 
+              label="Exit Condition"
+              value={experiment.exitCondition || ""}
+              displayValue={getExitCondition()}
+              onSave={(val) => {
+                const updated = { ...experiment, exitCondition: val.trim() || null };
+                onUpdate?.(validateExperiment(updated));
+              }}
+            />
+            <EditableField 
+              label="Filters"
+              value={experiment.filters.join(", ")}
+              displayValue={
+                experiment.filters.length === 0 ? (
+                  "None"
+                ) : (
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {experiment.filters.map((filter, i) => (
+                      <Badge key={i} variant="secondary" className="rounded-md font-normal text-sm px-2.5 py-0.5">
+                        {filter}
+                      </Badge>
+                    ))}
+                  </div>
+                )
+              }
+              onSave={(val) => {
+                const filters = val.split(",").map(s => s.trim()).filter(Boolean);
+                const updated = { ...experiment, filters };
+                onUpdate?.(validateExperiment(updated));
+              }}
+            />
           </div>
 
           <Separator className="bg-zinc-100 dark:bg-zinc-800" />
