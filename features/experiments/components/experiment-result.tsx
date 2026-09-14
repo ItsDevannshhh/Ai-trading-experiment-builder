@@ -4,7 +4,7 @@ import { TradingExperiment } from "../types/experiment.types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+
 import { RiErrorWarningLine, RiCheckLine, RiInformationLine } from "@remixicon/react";
 
 interface ExperimentResultProps {
@@ -30,15 +30,7 @@ export function ExperimentResult({ experiment }: ExperimentResultProps) {
   const isReady = experiment.status === "ready";
   const needsClarification = experiment.status === "needs_clarification";
 
-  // Friendly names for missing fields
-  const friendlyFieldNames: Record<string, string> = {
-    instrument: "Instrument",
-    timeframe: "Timeframe",
-    entryCondition: "Entry condition",
-    exitCondition: "Exit condition",
-    holdingPeriod: "Holding period",
-    filters: "Filters",
-  };
+
 
   return (
     <div className="w-full flex flex-col gap-6 mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -111,7 +103,7 @@ export function ExperimentResult({ experiment }: ExperimentResultProps) {
           {/* Original Question */}
           <div className="flex flex-col gap-2 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
             <span className="text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Research Question</span>
-            <span className="text-base italic text-zinc-700 dark:text-zinc-300">"{experiment.researchQuestion}"</span>
+            <span className="text-base italic text-zinc-700 dark:text-zinc-300">&quot;{experiment.researchQuestion}&quot;</span>
           </div>
 
           {/* Ambiguities & Assumptions */}
