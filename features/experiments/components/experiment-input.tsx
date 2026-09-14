@@ -36,10 +36,11 @@ export function ExperimentInput({ onSuccess }: ExperimentInputProps) {
           className={[
             "w-full min-h-[156px] resize-none text-[15px] leading-relaxed",
             "px-5 pt-5 pb-[60px]",
-            "bg-card text-foreground placeholder:text-muted-foreground/50",
-            "border border-border rounded-lg shadow-sm",
+            "bg-card text-foreground placeholder:text-muted-foreground/40",
+            "border border-border rounded-lg",
+            "shadow-[0_1px_4px_oklch(0_0_0/0.06),0_0_0_1px_var(--border)]",
             "outline-none transition-all duration-150",
-            "focus:border-foreground/30 focus:ring-2 focus:ring-foreground/8 focus:shadow-md",
+            "focus:border-[var(--tl-accent-border)] focus:ring-2 focus:ring-[var(--tl-accent-muted)] focus:shadow-[0_2px_12px_var(--tl-accent-muted)]",
             "disabled:opacity-50 disabled:cursor-not-allowed",
           ].join(" ")}
           value={query}
@@ -54,7 +55,7 @@ export function ExperimentInput({ onSuccess }: ExperimentInputProps) {
         />
 
         {/* Bottom toolbar */}
-        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 border-t border-border/60 bg-muted/30 rounded-b-lg">
+        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 border-t border-border/50 bg-muted/50 rounded-b-lg">
           <span className="text-[10px] text-muted-foreground/50 hidden sm:block select-none">
             {isPending ? "Analyzing…" : "⌘ + Enter to analyze"}
           </span>
@@ -67,9 +68,7 @@ export function ExperimentInput({ onSuccess }: ExperimentInputProps) {
               "ml-auto inline-flex items-center gap-2",
               "text-[13px] font-medium",
               "px-4 py-1.5 rounded-md",
-              "transition-all duration-150",
-              "disabled:opacity-40 disabled:cursor-not-allowed",
-              "bg-foreground text-background hover:opacity-90 active:opacity-80",
+              "tl-btn-primary",
             ].join(" ")}
             aria-label={isPending ? "Analyzing experiment" : "Analyze experiment"}
           >

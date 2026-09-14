@@ -100,7 +100,7 @@ export function ExperimentResult({
       </div>
 
       {/* ── Experiment card ───────────────────────────────────── */}
-      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-[0_1px_6px_oklch(0_0_0/0.07),0_0_0_1px_var(--border)]">
 
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/20">
@@ -347,7 +347,7 @@ export function ExperimentResult({
       )}
 
       {/* ── Backtest definition panel ─────────────────────────── */}
-      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-[0_1px_6px_oklch(0_0_0/0.07),0_0_0_1px_var(--border)]">
         <div className="flex items-center justify-between px-5 py-4">
           <div className="flex flex-col gap-0.5">
             <p className="tl-label">Backtest-Ready Definition</p>
@@ -398,16 +398,16 @@ export function ExperimentResult({
           <div
             id="json-panel"
             className="border-t border-border animate-in fade-in slide-in-from-top-1 duration-200"
+            style={{ borderTop: "2px solid var(--tl-accent-border)" }}
           >
             <pre
               className={[
-                "text-[12px] leading-relaxed",
+                "text-[12px] leading-[1.7]",
                 "font-mono",
-                "text-foreground/80",
+                "text-foreground/75",
                 "bg-[var(--tl-surface-code)]",
-                "px-5 py-4",
+                "px-6 py-5",
                 "overflow-x-auto",
-                "scrollbar-thin",
               ].join(" ")}
             >
               {jsonString}

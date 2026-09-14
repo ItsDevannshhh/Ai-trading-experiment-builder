@@ -207,7 +207,7 @@ export function ClarificationPanel({
             <button
               type="button"
               onClick={() => applyAndFinish(pendingClarification)}
-              className="inline-flex items-center text-[13px] font-medium px-3.5 py-1.5 bg-foreground text-background rounded-md hover:opacity-90 transition-opacity duration-150"
+              className="inline-flex items-center text-[13px] font-medium px-3.5 py-1.5 rounded-md tl-btn-primary"
             >
               Apply anyway
             </button>
@@ -266,10 +266,10 @@ export function ClarificationPanel({
             disabled={mutation.isPending}
             className={[
               "w-full text-[14px] px-3.5 py-2.5",
-              "bg-background text-foreground placeholder:text-muted-foreground/50",
+              "bg-card text-foreground placeholder:text-muted-foreground/50",
               "border border-[var(--tl-amber-border)] rounded-md",
               "outline-none transition-all duration-150",
-              "focus:border-[var(--tl-amber)] focus:ring-2 focus:ring-[var(--tl-amber)]/15",
+              "focus:border-[var(--tl-accent-border)] focus:ring-2 focus:ring-[var(--tl-accent-muted)]",
               "disabled:opacity-50",
             ].join(" ")}
             aria-label={question}
@@ -287,7 +287,7 @@ export function ClarificationPanel({
             type="button"
             onClick={handleContinue}
             disabled={!answer.trim() || mutation.isPending}
-            className="inline-flex items-center gap-2 text-[13px] font-medium px-4 py-2 bg-foreground text-background rounded-md hover:opacity-90 active:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity duration-150"
+            className="inline-flex items-center gap-2 text-[13px] font-medium px-4 py-2 rounded-md tl-btn-primary"
           >
             {mutation.isPending ? (
               <>

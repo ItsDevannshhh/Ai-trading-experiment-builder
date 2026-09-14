@@ -139,7 +139,7 @@ export function EditableField({
               "bg-background text-foreground",
               "border border-border rounded-md",
               "outline-none transition-all duration-150",
-              "focus:border-foreground/40 focus:ring-1 focus:ring-foreground/15",
+              "focus:border-[var(--tl-accent-border)] focus:ring-1 focus:ring-[var(--tl-accent-muted)]",
               activeError &&
                 "border-destructive focus:border-destructive focus:ring-destructive/20"
             )}
