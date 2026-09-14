@@ -18,7 +18,7 @@ export function toBacktestDefinition(experiment: TradingExperiment): BacktestDef
   const resolvedTimeframe = timeframe.value !== "unknown" ? timeframe.value : null;
 
   const resolvedHoldingPeriod =
-    holdingPeriod.value !== null || holdingPeriod.unit !== "unknown"
+    holdingPeriod.value !== null && holdingPeriod.unit !== "unknown"
       ? { value: holdingPeriod.value, unit: holdingPeriod.unit }
       : null;
 

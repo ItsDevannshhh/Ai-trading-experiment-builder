@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-import { RiErrorWarningLine, RiCheckLine, RiInformationLine, RiCodeSSlashLine, RiFileCopyLine, RiCheckboxCircleLine } from "@remixicon/react";
+import { RiCheckLine, RiInformationLine, RiCodeSSlashLine, RiFileCopyLine, RiCheckboxCircleLine } from "@remixicon/react";
 import { ClarificationPanel } from "./clarification-panel";
 
 interface ExperimentResultProps {
