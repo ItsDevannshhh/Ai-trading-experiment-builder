@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ExperimentInput } from "./experiment-input";
+import { ExperimentResult } from "./experiment-result";
 import { TradingExperiment } from "../types/experiment.types";
 
 export function ExperimentWorkspace() {
@@ -24,6 +25,10 @@ export function ExperimentWorkspace() {
       </div>
       
       <ExperimentInput onSuccess={handleAnalyzeSuccess} />
+      
+      {experiment && (
+        <ExperimentResult experiment={experiment} />
+      )}
     </div>
   );
 }
