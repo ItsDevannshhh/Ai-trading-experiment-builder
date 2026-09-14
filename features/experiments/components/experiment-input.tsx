@@ -57,7 +57,7 @@ export function ExperimentInput({ onSuccess }: ExperimentInputProps) {
       </div>
 
       {error && (
-        <p className="text-sm text-red-500 font-medium px-1">
+        <p role="alert" className="text-sm text-red-500 font-medium px-1">
           {error instanceof Error ? error.message : "Something went wrong while analyzing your experiment."}
         </p>
       )}

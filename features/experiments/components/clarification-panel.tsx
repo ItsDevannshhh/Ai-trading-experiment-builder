@@ -227,7 +227,7 @@ export function ClarificationPanel({ experiment, onExperimentUpdate }: Clarifica
             className="text-base md:text-base py-5 px-3 bg-white dark:bg-zinc-900 border-amber-300 dark:border-amber-800 rounded-lg shadow-sm"
           />
           {error && (
-            <span className="text-sm text-red-600 dark:text-red-400 font-medium">{error}</span>
+            <span role="alert" className="text-sm text-red-600 dark:text-red-400 font-medium">{error}</span>
           )}
           <div className="flex justify-end mt-2">
             <Button

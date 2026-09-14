@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ExperimentInput } from "./experiment-input";
 import { ExperimentResult } from "./experiment-result";
-import { ClarificationPanel } from "./clarification-panel";
 import { TradingExperiment } from "../types/experiment.types";
 import { Button } from "@/components/ui/button";
 
@@ -11,7 +10,6 @@ export function ExperimentWorkspace() {
   const [experiment, setExperiment] = useState<TradingExperiment | null>(null);
 
   const handleAnalyzeSuccess = (data: TradingExperiment) => {
-    console.log("Analyzed Experiment:", data);
     setExperiment(data);
   };
 
@@ -32,12 +30,6 @@ export function ExperimentWorkspace() {
         <div className="flex flex-col gap-6">
           <ExperimentInput onSuccess={handleAnalyzeSuccess} />
           <ExperimentResult experiment={experiment} onUpdate={setExperiment} />
-          {experiment.status === "needs_clarification" && (
-            <ClarificationPanel
-              experiment={experiment}
-              onExperimentUpdate={setExperiment}
-            />
-          )}
           <div className="flex justify-center mt-6">
             <Button 
               variant="outline" 

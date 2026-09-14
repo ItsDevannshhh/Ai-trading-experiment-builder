@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 import { RiErrorWarningLine, RiCheckLine, RiInformationLine, RiCodeSSlashLine, RiFileCopyLine, RiCheckboxCircleLine } from "@remixicon/react";
+import { ClarificationPanel } from "./clarification-panel";
 
 interface ExperimentResultProps {
   experiment: TradingExperiment;
@@ -250,6 +251,14 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
         </CardContent>
       </Card>
 
+      {/* Clarification Panel */}
+      {needsClarification && onUpdate && (
+        <ClarificationPanel
+          experiment={experiment}
+          onExperimentUpdate={onUpdate}
+        />
+      )}
+
       {/* Backtest JSON Panel */}
       <Card className="rounded-xl border-zinc-200 dark:border-zinc-800 shadow-sm bg-white dark:bg-zinc-950 overflow-hidden">
         <CardHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-900 pb-3 pt-4 px-5">
@@ -298,13 +307,6 @@ export function ExperimentResult({ experiment, onUpdate }: ExperimentResultProps
         )}
       </Card>
 
-      {/* Clarification Warning (Compact) */}
-      {needsClarification && experiment.missingFields.length > 0 && (
-        <div className="flex items-center gap-2 mt-2 px-2 text-amber-600 dark:text-amber-500 font-medium">
-          <RiErrorWarningLine className="w-5 h-5" />
-          <span>Needs clarification</span>
-        </div>
-      )}
     </div>
   );
 }
