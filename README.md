@@ -106,7 +106,6 @@ Instead, TradeLab asks the user for the missing information.
 A field can exist while still being ambiguous.
 
 For example:
-
 > "Buy NIFTY during high volatility."
 
 The system can preserve "high volatility" as a filter while identifying that its meaning may require clarification.
