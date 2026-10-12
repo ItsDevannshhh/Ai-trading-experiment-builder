@@ -2,6 +2,7 @@
 
 TradeLab is a small AI-native prototype for turning natural-language trading hypotheses into structured, testable experiments.
 
+
 Instead of treating the LLM as a generic trading chatbot, TradeLab uses AI specifically as an **experiment interpreter**:
 
 > Natural-language hypothesis → Structured experiment → Missing information → Clarification → Final experiment
